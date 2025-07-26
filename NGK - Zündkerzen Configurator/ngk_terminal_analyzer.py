@@ -63,19 +63,19 @@ class NGKAnalyzer:
         }
         
         self.waermewerte = [
-            {'wert': 2, 'typ': 'Sehr heiß', 'temp': 'Niedrige Motortemp.', 'anwendung': 'Leistungsschwache Motoren'},
-            {'wert': 3, 'typ': 'Heiß', 'temp': 'Niedrig-normal', 'anwendung': 'Wenig belastete Motoren'},
-            {'wert': 4, 'typ': 'Heiß', 'temp': 'Niedrig-normal', 'anwendung': 'Stadtverkehr, Kurzstrecken'},
-            {'wert': 5, 'typ': 'Heiß', 'temp': 'Normal', 'anwendung': 'Standard-Anwendungen'},
-            {'wert': 6, 'typ': 'Warm', 'temp': 'Normal', 'anwendung': 'Standard-Anwendungen'},
-            {'wert': 7, 'typ': 'Normal', 'temp': 'Standard', 'anwendung': 'Allgemeine Anwendung'},
-            {'wert': 8, 'typ': 'Normal/Kalt', 'temp': 'Höher', 'anwendung': 'Winterwetter (bis 15°C)'},
-            {'wert': 9, 'typ': 'Kalt', 'temp': 'Hoch', 'anwendung': 'Normal/Regen (bis 20°C)'},
-            {'wert': 10, 'typ': 'Kalt', 'temp': 'Hoch', 'anwendung': 'Sommerwetter (ab 20°C)'},
-            {'wert': 11, 'typ': 'Sehr kalt', 'temp': 'Sehr hoch', 'anwendung': 'Sportmotoren'},
-            {'wert': 12, 'typ': 'Sehr kalt', 'temp': 'Sehr hoch', 'anwendung': 'Leistungsstarke Motoren'},
-            {'wert': 13, 'typ': 'Racing', 'temp': 'Extrem', 'anwendung': 'Rennsport, Hochleistung'},
-            {'wert': 14, 'typ': 'Racing', 'temp': 'Extrem', 'anwendung': 'Rennzwecke, höchste Belastung'}
+            {'wert': 2, 'typ': 'Sehr heiß', 'temp': 'Niedrig', 'anwendung': 'Leistungsschwache Motoren', 'waermeleit': '15-18 W/mK'},
+            {'wert': 3, 'typ': 'Heiß', 'temp': 'Niedrig-normal', 'anwendung': 'Wenig belastete Motoren', 'waermeleit': '18-21 W/mK'},
+            {'wert': 4, 'typ': 'Heiß', 'temp': 'Niedrig-normal', 'anwendung': 'Stadtverkehr, Kurzstrecken', 'waermeleit': '20-23 W/mK'},
+            {'wert': 5, 'typ': 'Heiß', 'temp': 'Normal', 'anwendung': 'Standard-Anwendungen', 'waermeleit': '22-25 W/mK'},
+            {'wert': 6, 'typ': 'Warm', 'temp': 'Normal', 'anwendung': 'Standard-Anwendungen', 'waermeleit': '24-27 W/mK'},
+            {'wert': 7, 'typ': 'Normal', 'temp': 'Standard', 'anwendung': 'Allgemeine Anwendung', 'waermeleit': '26-29 W/mK'},
+            {'wert': 8, 'typ': 'Normal/Kalt', 'temp': 'Höher', 'anwendung': 'Winterwetter (bis 15°C)', 'waermeleit': '28-32 W/mK'},
+            {'wert': 9, 'typ': 'Kalt', 'temp': 'Hoch', 'anwendung': 'Normal/Regen (bis 20°C)', 'waermeleit': '30-35 W/mK'},
+            {'wert': 10, 'typ': 'Kalt', 'temp': 'Hoch', 'anwendung': 'Sommerwetter (ab 20°C)', 'waermeleit': '33-38 W/mK'},
+            {'wert': 11, 'typ': 'Sehr kalt', 'temp': 'Sehr hoch', 'anwendung': 'Sportmotoren', 'waermeleit': '35-40 W/mK'},
+            {'wert': 12, 'typ': 'Sehr kalt', 'temp': 'Sehr hoch', 'anwendung': 'Leistungsstarke Motoren', 'waermeleit': '38-43 W/mK'},
+            {'wert': 13, 'typ': 'Racing', 'temp': 'Extrem', 'anwendung': 'Rennsport, Hochleistung', 'waermeleit': '40-45 W/mK'},
+            {'wert': 14, 'typ': 'Racing', 'temp': 'Extrem', 'anwendung': 'Rennzwecke, höchste Belastung', 'waermeleit': '42-48 W/mK'}
         ]
 
     def clear_screen(self):
@@ -151,6 +151,7 @@ class NGKAnalyzer:
             waermewert_info = next((w for w in self.waermewerte if w['wert'] == analysis['waermewert']), None)
             if waermewert_info:
                 print(f"   {analysis['waermewert']} → {waermewert_info['typ']} ({waermewert_info['anwendung']})")
+                print(f"   🔬 Wärmeleitwert: {waermewert_info['waermeleit']}")
             else:
                 print(f"   {analysis['waermewert']} → Unbekannter Wärmewert")
         else:
@@ -185,13 +186,19 @@ class NGKAnalyzer:
 
     def print_waermewert_table(self):
         """Gibt die Wärmewert-Tabelle aus"""
-        print("📊 WÄRMEWERT-TABELLE")
-        print("=" * 80)
-        print(f"{'Wert':<4} | {'Typ':<12} | {'Temperatur':<15} | {'Anwendung':<35}")
-        print("-" * 80)
+        print("📊 WÄRMEWERT-TABELLE MIT PHYSIKALISCHEN WERTEN")
+        print("=" * 100)
+        print(f"{'Wert':<4} | {'Typ':<12} | {'Temperatur':<15} | {'Wärmeleitwert':<15} | {'Anwendung':<35}")
+        print("-" * 100)
         
         for item in self.waermewerte:
-            print(f"{item['wert']:<4} | {item['typ']:<12} | {item['temp']:<15} | {item['anwendung']:<35}")
+            print(f"{item['wert']:<4} | {item['typ']:<12} | {item['temp']:<15} | {item['waermeleit']:<15} | {item['anwendung']:<35}")
+        print()
+        print("💡 HINWEISE:")
+        print("   • Wärmeleitwerte sind effektive Systemwerte (Material + Geometrie)")
+        print("   • Basis-Material: Aluminiumoxid-Keramik (Al2O3)")
+        print("   • Höhere Werte = bessere Wärmeableitung = 'kältere' Kerze")
+        print("   • Temperaturunterschied zwischen Wärmewerten: ~70-100°C")
         print()
 
     def print_gewinde_table(self):
@@ -203,6 +210,39 @@ class NGKAnalyzer:
         
         for code, data in self.gewinde_daten.items():
             print(f"{code:<4} | {data['durchmesser']:<20} | {data['schluessel']:<10}")
+        print()
+
+    def show_physical_explanation(self):
+        """Erklärt die physikalischen Grundlagen"""
+        print("🔬 PHYSIKALISCHE GRUNDLAGEN DER WÄRMELEITWERTE")
+        print("=" * 70)
+        print()
+        print("📐 MATERIAL UND KONSTRUKTION:")
+        print("   • Isolator-Material: Aluminiumoxid-Keramik (Al2O3)")
+        print("   • Material-Wärmeleitfähigkeit: 26-30 W/mK")
+        print("   • Effektive Systemwerte: 15-48 W/mK (je nach Geometrie)")
+        print()
+        print("🏗️  GEOMETRIE-EINFLUSS:")
+        print("   • Heiße Kerzen (2-6): Längere Isolator-Nase")
+        print("     → Längerer Wärmeweg → Schlechtere Ableitung")
+        print("   • Kalte Kerzen (10-14): Kürzere Isolator-Nase")
+        print("     → Kürzerer Wärmeweg → Bessere Ableitung")
+        print()
+        print("🌡️  TEMPERATUR-UNTERSCHIEDE:")
+        print("   • Zwischen Wärmewerten: 70-100°C Unterschied")
+        print("   • Optimaler Bereich: 500-800°C am Isolator-Ende")
+        print("   • Unter 450°C: Verschmutzung/Verrußung")
+        print("   • Über 800°C: Glühzündungen/Elektrodenverschleiß")
+        print()
+        print("⚡ WÄRMEABLEITUNG:")
+        print("   • 70% über Gewinde/Sitzfläche zum Zylinderkopf")
+        print("   • 20% über Isolator-Kontakt zum Metallgehäuse")
+        print("   • 10% über Elektroden und Abgase")
+        print()
+        print("💡 WICHTIG:")
+        print("   • NGK publiziert keine exakten W/mK-Werte")
+        print("   • Werte basieren auf technischer Analyse und Geometrie")
+        print("   • Effektive Wärmeleitfähigkeit = Material × Geometriefaktor")
         print()
 
     def print_codes_overview(self):
@@ -235,7 +275,8 @@ class NGKAnalyzer:
         print("2. Wärmewert-Tabelle anzeigen") 
         print("3. Gewinde-Codes anzeigen")
         print("4. Code-Übersicht anzeigen")
-        print("5. Beispiele anzeigen")
+        print("5. Physikalische Grundlagen erklären")
+        print("6. Beispiele anzeigen")
         print("0. Beenden")
         print()
 
@@ -263,7 +304,7 @@ class NGKAnalyzer:
             self.show_menu()
             
             try:
-                choice = input("Wähle eine Option (0-5): ").strip()
+                choice = input("Wähle eine Option (0-6): ").strip()
                 
                 if choice == '0':
                     print("\n👋 Auf Wiedersehen!")
@@ -305,6 +346,12 @@ class NGKAnalyzer:
                     input("⏎ Drücke Enter um fortzufahren...")
                     
                 elif choice == '5':
+                    self.clear_screen()
+                    self.print_header()
+                    self.show_physical_explanation()
+                    input("⏎ Drücke Enter um fortzufahren...")
+                    
+                elif choice == '6':
                     self.clear_screen()
                     self.print_header()
                     self.show_examples()
