@@ -1,0 +1,452 @@
+        <div class="status-bar">
+            <h3>📦 Bestellstatus</h3>
+            <div>Bestellt: <span id="checked-count">0</span> / <span id="total-count">16</span> Artikel</div>
+            <div>Geschätzter Gesamtpreis: <span id="total-price">€0,00</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button class="btn" onclick="resetAllCheckboxes()">🔄 Alle zurücksetzen</button>
+            <button class="btn btn-success" onclick="checkPriority1()">✅ Priorität 1 abhaken</button>
+            <button class="btn btn-warning" onclick="uncheckOptional()">➖ Optionales abwählen</button>
+            <button class="btn" onclick="exportCheckedList()">📋 Checkliste exportieren</button>
+        </div><!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZX6R Sensor Logger - Amazon Bestelltabelle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #232F3E;
+            text-align: center;
+            border-bottom: 3px solid #FF9900;
+            padding-bottom: 10px;
+        }
+        .header {
+            background: linear-gradient(135deg, #232F3E, #374A67);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th {
+            background-color: #232F3E;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: top;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e8f4f8;
+        }
+        .priority-1 { border-left: 4px solid #28a745; }
+        .priority-2 { border-left: 4px solid #ffc107; }
+        .priority-3 { border-left: 4px solid #6c757d; }
+        
+        .search-term {
+            background-color: #e3f2fd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .price {
+            font-weight: bold;
+            color: #B12704;
+            font-size: 1.1em;
+        }
+        .total {
+            background-color: #232F3E;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .category {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+        }
+        .benefit {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .optional {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        /* Checkbox Styling */
+        .checkbox-cell {
+            text-align: center;
+            width: 50px;
+        }
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        
+        /* Abgehakte Zeilen */
+        .checked-row {
+            background-color: #d4edda !important;
+            opacity: 0.7;
+            text-decoration: line-through;
+        }
+        .checked-row .price {
+            color: #28a745;
+        }
+        
+        /* Status-Anzeige */
+        .status-bar {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            background-color: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background-color: #232F3E;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background-color: #374A67;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏍️ ZX6R Original-Sensor Logger - Amazon Bestellliste</h1>
+        
+        <div class="header">
+            <h3>💡 Projekt: Original RPM + Temperatur Anzapfung (1998 ZX6R 600G)</h3>
+            <p><strong>Ziel:</strong> Original-Sensoren parallel anzapfen für Datenlogger<br>
+            <strong>Kombination:</strong> ESP32 + Smartphone (Physics Toolbox) + Original-Sensoren<br>
+            <strong>Setup:</strong> 135/132.5/132.5/135 Düsen + CR10EIX + K&N Filter</p>
+        </div>
+
+        <div class="success">
+            <strong>✅ Vorteil Original-Anzapfung:</strong> Keine zusätzlichen Sensoren nötig! 
+            RPM + Temperatur direkt vom Original-System abgreifen. Günstig und elegant!
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th class="checkbox-cell">✓</th>
+                    <th>Priorität</th>
+                    <th>Artikel</th>
+                    <th>Amazon Suchbegriff</th>
+                    <th>Beschreibung</th>
+                    <th>ca. Preis</th>
+                    <th>Zweck</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- KERN-KOMPONENTEN (Priorität 1) -->
+                <tr class="category">
+                    <td></td>
+                    <td colspan="6">🔥 KERN-KOMPONENTEN (Sofort bestellen)</td>
+                </tr>
+                
+                <tr class="priority-1" data-price="15.99" data-priority="1">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>1</strong></td>
+                    <td>ESP32 Development Board</td>
+                    <td><span class="search-term">ESP32 WROOM-32 Development Board</span></td>
+                    <td>30-Pin ESP32 DevKit V1, WiFi + Bluetooth, USB-C</td>
+                    <td class="price">15,99€</td>
+                    <td>Hauptcontroller für Sensor-Anzapfung</td>
+                </tr>
+                
+                <tr class="priority-1" data-price="7.99" data-priority="1">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>1</strong></td>
+                    <td>Spannungswandler 12V→5V</td>
+                    <td><span class="search-term">LM2596 DC DC Step Down Converter 12V 5V</span></td>
+                    <td>Einstellbarer Buck Converter, 3A, mit Schraubklemmen</td>
+                    <td class="price">7,99€</td>
+                    <td>ESP32 Stromversorgung von 12V Motorrad</td>
+                </tr>
+                
+                <tr class="priority-1" data-price="8.99" data-priority="1">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>1</strong></td>
+                    <td>Widerstand Sortiment</td>
+                    <td><span class="search-term">Widerstand Sortiment 1/4W 1% Metallfilm</span></td>
+                    <td>600 Stück, 1Ω bis 1MΩ, 30 Werte, für Spannungsteiler</td>
+                    <td class="price">8,99€</td>
+                    <td>10kΩ Schutzwiderstände für Sensoranzapfung</td>
+                </tr>
+                
+                <tr class="priority-1" data-price="12.99" data-priority="1">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>1</strong></td>
+                    <td>Automotive Y-Kabel Set</td>
+                    <td><span class="search-term">KFZ Y Kabel Verteiler Abzweig Automotive</span></td>
+                    <td>2-adrig + 3-adrig, wasserdicht, für Sensoranzapfung</td>
+                    <td class="price">12,99€</td>
+                    <td>Original-Sensoren parallel anzapfen</td>
+                </tr>
+
+                <!-- GEHÄUSE & MONTAGE (Priorität 1) -->
+                <tr class="category">
+                    <td></td>
+                    <td colspan="6">📦 GEHÄUSE & MONTAGE</td>
+                </tr>
+                
+                <tr class="priority-1" data-price="9.99" data-priority="1">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>1</strong></td>
+                    <td>Wasserdichtes Gehäuse</td>
+                    <td><span class="search-term">Wasserdicht Gehäuse IP65 ABS 100x68x50mm</span></td>
+                    <td>Kunststoff-Gehäuse mit Dichtung für ESP32</td>
+                    <td class="price">9,99€</td>
+                    <td>Schutz für ESP32 + Elektronik</td>
+                </tr>
+                
+                <tr class="priority-1" data-price="6.99" data-priority="1">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>1</strong></td>
+                    <td>Kabelverschraubungen</td>
+                    <td><span class="search-term">Kabelverschraubung M12 wasserdicht IP68</span></td>
+                    <td>M12x1,5, 5-10mm Kabelbereich, 4 Stück</td>
+                    <td class="price">6,99€</td>
+                    <td>Wasserdichte Kabeleinführung</td>
+                </tr>
+
+                <!-- VERKABELUNG (Priorität 2) -->
+                <tr class="category">
+                    <td></td>
+                    <td colspan="6">🔌 VERKABELUNG & SICHERHEIT</td>
+                </tr>
+                
+                <tr class="priority-2" data-price="7.99" data-priority="2">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>2</strong></td>
+                    <td>KFZ Flachsicherung Set</td>
+                    <td><span class="search-term">Auto Flachsicherung Sortiment mit Halter</span></td>
+                    <td>120 Stück, 2A-30A, mit Sicherungshalter + Kabel</td>
+                    <td class="price">7,99€</td>
+                    <td>Absicherung 12V Stromversorgung (2A)</td>
+                </tr>
+                
+                <tr class="priority-2" data-price="8.99" data-priority="2">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>2</strong></td>
+                    <td>Automotive Kabel</td>
+                    <td><span class="search-term">KFZ Kabel FLRY 0,75mm² automotive</span></td>
+                    <td>5m Rolle, verschiedene Farben, temperaturfest</td>
+                    <td class="price">8,99€</td>
+                    <td>Verbindungen ESP32 ↔ Original-Sensoren</td>
+                </tr>
+                
+                <tr class="priority-2" data-price="9.99" data-priority="2">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>2</strong></td>
+                    <td>Schrumpfschlauch Set</td>
+                    <td><span class="search-term">Schrumpfschlauch Sortiment wasserdicht</span></td>
+                    <td>328 Stück, verschiedene Größen, mit Kleber</td>
+                    <td class="price">9,99€</td>
+                    <td>Wasserdichte Verbindungen isolieren</td>
+                </tr>
+
+                <!-- WERKZEUG (Priorität 3) -->
+                <tr class="category">
+                    <td></td>
+                    <td colspan="6">🛠️ WERKZEUG (falls nicht vorhanden)</td>
+                </tr>
+                
+                <tr class="priority-3" data-price="16.99" data-priority="3">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>3</strong></td>
+                    <td>Lötkolben Set</td>
+                    <td><span class="search-term">Lötkolben Set 60W Temperatur einstellbar</span></td>
+                    <td>Mit verschiedenen Spitzen, Lötzinn, Entlötpumpe</td>
+                    <td class="price">16,99€</td>
+                    <td class="optional">Nur falls kein Lötkolben vorhanden</td>
+                </tr>
+                
+                <tr class="priority-3" data-price="12.99" data-priority="3">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>3</strong></td>
+                    <td>Abisolierzange</td>
+                    <td><span class="search-term">Automatische Abisolierzange 0,2-6mm²</span></td>
+                    <td>Selbsteinstellend, crimpt auch Aderendhülsen</td>
+                    <td class="price">12,99€</td>
+                    <td class="optional">Für saubere Kabelbearbeitung</td>
+                </tr>
+                
+                <tr class="priority-3" data-price="19.99" data-priority="3">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td><strong>3</strong></td>
+                    <td>Multimeter</td>
+                    <td><span class="search-term">Digital Multimeter TRMS 6000 Counts</span></td>
+                    <td>Spannung, Strom, Widerstand, Durchgang</td>
+                    <td class="price">19,99€</td>
+                    <td class="optional">Für Fehlersuche und Tests</td>
+                </tr>
+
+                <!-- ZUSÄTZLICH/OPTIONAL -->
+                <tr class="category">
+                    <td></td>
+                    <td colspan="6">➕ ZUSÄTZLICH / OPTIONAL</td>
+                </tr>
+                
+                <tr class="priority-3" data-price="7.99" data-priority="optional">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td>Opt.</td>
+                    <td>MicroSD Karte</td>
+                    <td><span class="search-term">SanDisk Ultra 32GB microSDHC Class 10</span></td>
+                    <td>Für lokale Datenspeicherung (Backup)</td>
+                    <td class="price">7,99€</td>
+                    <td class="optional">Falls Smartphone-Sync ausfällt</td>
+                </tr>
+                
+                <tr class="priority-3" data-price="5.99" data-priority="optional">
+                    <td class="checkbox-cell"><input type="checkbox" class="custom-checkbox" onchange="updateStatus()"></td>
+                    <td>Opt.</td>
+                    <td>Dupont Kabel Set</td>
+                    <td><span class="search-term">Dupont Kabel Set 40x 20cm male female</span></td>
+                    <td>Für Prototyping und Test-Aufbauten</td>
+                    <td class="price">5,99€</td>
+                    <td class="optional">Entwicklung/Test vor finaler Montage</td>
+                </tr>
+
+                <!-- GESAMTKOSTEN -->
+                <tr class="total">
+                    <td></td>
+                    <td colspan="4"><strong>💰 GESAMTKOSTEN (Priorität 1 - Sofort nötig)</strong></td>
+                    <td class="price" id="priority1-total">62,94€</td>
+                    <td><strong>Funktionsfähiger Logger</strong></td>
+                </tr>
+                
+                <tr class="total">
+                    <td></td>
+                    <td colspan="4"><strong>💰 MIT WERKZEUG (falls nicht vorhanden)</strong></td>
+                    <td class="price" id="full-total">112,90€</td>
+                    <td><strong>Komplett-Set</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="warning">
+            <h4>⚠️ WICHTIGE HINWEISE:</h4>
+            <ul>
+                <li><strong>Original-Kabel NIEMALS durchtrennen!</strong> Nur Y-Kabel verwenden</li>
+                <li><strong>12V → 3.3V Spannungsteiler:</strong> 10kΩ Schutzwiderstände verwenden</li>
+                <li><strong>Sicherung:</strong> 2A Flachsicherung in +12V Leitung einbauen</li>
+                <li><strong>Test:</strong> Erst Schaltung testen bevor Original-Sensoren anschließen</li>
+            </ul>
+        </div>
+
+        <div class="success">
+            <h4>📱 SMARTPHONE APP (KOSTENLOS):</h4>
+            <ul>
+                <li><strong>Physics Toolbox Suite</strong> (Android/iOS) - GPS, Gyro, Beschleunigung</li>
+                <li><strong>Sensor Logger</strong> (Android) - Alternative mit CSV-Export</li>
+                <li><strong>Kombiniert:</strong> ESP32 (RPM+Temp) + Smartphone (GPS+G-Forces)</li>
+            </ul>
+        </div>
+
+        <div class="header">
+            <h4>🎯 ERWARTETE ERGEBNISSE:</h4>
+            <p><span class="benefit">✅ Echte RPM</span> vom Original-Tachosignal<br>
+            <span class="benefit">✅ Original-Temperatur</span> vom Kühlwasser-Sensor<br>
+            <span class="benefit">✅ GPS-Präzision</span> vom Smartphone<br>
+            <span class="benefit">✅ G-Kräfte & Gyro</span> für Fahrdynamik-Analyse<br>
+            <span class="benefit">✅ Zeitsynchronisation</span> beider Datenquellen<br>
+            <span class="benefit">✅ Direkter Import</span> in ZX6R Terminal App</p>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+            <p><strong>💡 EINKAUFS-TIPP:</strong> Bestelle zuerst nur Priorität 1 Artikel (€62,94). 
+            Das reicht für einen funktionsfähigen Logger. Werkzeug und Optionales später nachbestellen falls nötig.</p>
+            
+            <p><strong>🔍 AMAZON SUCHE:</strong> Einfach die "Amazon Suchbegriffe" aus der Tabelle kopieren und in die Amazon-Suche eingeben. 
+            Preise können abweichen, sind aber gute Richtwerte.</p>
+        </div>
+    </div>
+</body>
+</html>
